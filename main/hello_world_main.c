@@ -30,9 +30,7 @@ static const uint8_t char_data[] = {
 
 void lcd_test(void *pvParameters)
 {
-
-    ESP_ERROR_CHECK(hd44780_init(&lcd));
-
+    hd44780_clear(&lcd);
     hd44780_upload_character(&lcd, 0, char_data);
     hd44780_upload_character(&lcd, 1, char_data + 8);
 
@@ -58,5 +56,9 @@ void lcd_test(void *pvParameters)
 
 void app_main()
 {
+    ESP_ERROR_CHECK(hd44780_init(&lcd));
+    hd44780_puts(&lcd, "Testing LCD");
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+
     xTaskCreate(lcd_test, "lcd_test", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
 }
