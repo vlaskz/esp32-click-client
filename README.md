@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-# Hello World Example
+# The very beginning of an embedded system.
+Uses FreeRTOS to control a wide variety of devices, including wifi/bt/ble
 
-Starts a FreeRTOS task to print "Hello World"
-
-See the README.md file in the upper level 'examples' directory for more information about examples.
-=======
-# esp32-click-client
->>>>>>> 4a664ba3568153017015d781688f20a08b0a1515
+I also want to thank UncleRus for his lib esp-idf-lib, which i will be using.
