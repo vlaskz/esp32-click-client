@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> //unknown bug on intellisense. Just ignore it.
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <sys/time.h>
