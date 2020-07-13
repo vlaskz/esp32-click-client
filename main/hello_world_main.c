@@ -29,8 +29,8 @@ void app_main()
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#define EXAMPLE_ESP_WIFI_SSID "Virus"
-#define EXAMPLE_ESP_WIFI_PASS "cegonha13"
+#define EXAMPLE_ESP_WIFI_SSID "Vlaskz"
+#define EXAMPLE_ESP_WIFI_PASS "taytaytay"
 #define EXAMPLE_ESP_MAXIMUM_RETRY 5
 
 static char IPADDR[16];
@@ -156,6 +156,7 @@ void wifi_init_sta(void)
     ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler));
     ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler));
     vEventGroupDelete(s_wifi_event_group);
+    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
 }
 
 void show_wifi_info()
@@ -181,12 +182,17 @@ void show_wifi_info()
         hd44780_gotoxy(&lcd, 0, 1);
         hd44780_puts(&lcd, MKADDR);
         vTaskDelay(time_interval / portTICK_PERIOD_MS);
+        hd44780_clear(&lcd);
+        hd44780_gotoxy(&lcd, 0, 0);
+        hd44780_puts(&lcd, "ACCESS POINT:");
+        hd44780_gotoxy(&lcd, 0, 1);
+        hd44780_puts(&lcd, EXAMPLE_ESP_WIFI_SSID);
+        vTaskDelay(time_interval / portTICK_PERIOD_MS);
     }
 }
 
-void app_main(void)
+void nvs_init()
 {
-
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
     {
@@ -194,11 +200,15 @@ void app_main(void)
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
+}
 
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-    wifi_init_sta();
+void app_main(void)
+{
+    nvs_init(); //always call this first, if you want to use the non-volatile storage (ROM);
 
-    hd44780_init(&lcd);
+    wifi_init_sta(); //starts the uC as a station;
 
-    xTaskCreate(show_wifi_info, "show_wifi_info", configMINIMAL_STACK_SIZE * 5, NULL, 8, NULL);
+    hd44780_init(&lcd); //initializes the display;
+
+    xTaskCreate(show_wifi_info, "show_wifi_info", configMINIMAL_STACK_SIZE * 5, NULL, 8, NULL); //task to show some info regarding wifi connection.
 }
