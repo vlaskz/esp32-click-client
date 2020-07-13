@@ -160,26 +160,27 @@ void wifi_init_sta(void)
 
 void show_wifi_info()
 {
+    int16_t time_interval = 2000;
     for (;;)
     {
         hd44780_clear(&lcd);
         hd44780_gotoxy(&lcd, 0, 0);
-        hd44780_puts(&lcd, "IP:");
-        hd44780_gotoxy(&lcd, 3, 0);
+        hd44780_puts(&lcd, "IP ADDRESS:");
+        hd44780_gotoxy(&lcd, 0, 1);
         hd44780_puts(&lcd, IPADDR);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(time_interval / portTICK_PERIOD_MS);
         hd44780_clear(&lcd);
         hd44780_gotoxy(&lcd, 0, 0);
-        hd44780_puts(&lcd, "GW:");
-        hd44780_gotoxy(&lcd, 3, 0);
+        hd44780_puts(&lcd, "GATEWAY ADDRESS:");
+        hd44780_gotoxy(&lcd, 0, 1);
         hd44780_puts(&lcd, GWADDR);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(time_interval / portTICK_PERIOD_MS);
         hd44780_clear(&lcd);
         hd44780_gotoxy(&lcd, 0, 0);
-        hd44780_puts(&lcd, "MK:");
-        hd44780_gotoxy(&lcd, 3, 0);
+        hd44780_puts(&lcd, "NETWORK MASK:");
+        hd44780_gotoxy(&lcd, 0, 1);
         hd44780_puts(&lcd, MKADDR);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(time_interval / portTICK_PERIOD_MS);
     }
 }
 
