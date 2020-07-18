@@ -202,7 +202,7 @@ void nvs_init()
     ESP_ERROR_CHECK(ret);
 }
 
-void app_main(void)
+void app_main(void)
 {
     nvs_init(); //always call this first, if you want to use the non-volatile storage (ROM);
 
