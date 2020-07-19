@@ -24,7 +24,7 @@
 static char IPADDR[16];
 static char GWADDR[16];
 static char MKADDR[16];
-static char LOCAL_TIME[64];
+static char LOCAL_TIME[15];
 static const char *TAG = "Vlaskz's ESP32 Tinker";
 
 void time_sync_notification_cb(struct timeval *tv)
@@ -191,9 +191,13 @@ void showInfo()
         hd44780_clear(&lcd);
         hd44780_gotoxy(&lcd, 0, 0);
         hd44780_puts(&lcd, "B. JESUS DA LAPA");
-        hd44780_gotoxy(&lcd, 0, 1);
-        hd44780_puts(&lcd, LOCAL_TIME);
-        vTaskDelay(time_interval / portTICK_PERIOD_MS);
+
+        for (int i = 0; i < 5; i++)
+        {
+            hd44780_gotoxy(&lcd, 4, 1);
+            hd44780_puts(&lcd, LOCAL_TIME);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
     }
 }
 
@@ -223,6 +227,7 @@ void getTime()
         localtime_r(&now, &timeinfo);
 
         strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+        strftime(LOCAL_TIME, sizeof(LOCAL_TIME), "%X", &timeinfo);
 
         ESP_LOGI(TAG, "Bom Jesus da Lapa: %s", strftime_buf);
 
