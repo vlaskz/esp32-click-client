@@ -24,13 +24,15 @@
 static char IPADDR[16];
 static char GWADDR[16];
 static char MKADDR[16];
-static char LOCAL_TIME[15];
+static char LOCAL_TIME[17];
 static const char *TAG = "Vlaskz's ESP32 Tinker";
 
 void time_sync_notification_cb(struct timeval *tv)
 {
     ESP_LOGI(TAG, "Notification of a time sincronization event");
 }
+
+void showPopup(char *, char *, int, int);
 
 hd44780_t lcd = {
     .write_cb = NULL,
@@ -152,52 +154,32 @@ void wifi_init_sta(void)
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
 }
 
-void showInfo()
+void showPopup(char *line0, char *line1, int interval_ms, int count)
 {
-    int16_t time_interval = 2000;
-    hd44780_clear(&lcd);
-    hd44780_gotoxy(&lcd, 0, 0);
-    hd44780_puts(&lcd, "VLASKZ'S IOT RIG");
-    hd44780_gotoxy(&lcd, 0, 1);
-    hd44780_puts(&lcd, "github: @vlaskz");
-    vTaskDelay((time_interval * 3) / portTICK_PERIOD_MS);
-
-    for (;;)
+    for (int i = 0; i < count; i++)
     {
         hd44780_clear(&lcd);
         hd44780_gotoxy(&lcd, 0, 0);
-        hd44780_puts(&lcd, "IP ADDRESS:");
+        hd44780_puts(&lcd, line0);
         hd44780_gotoxy(&lcd, 0, 1);
-        hd44780_puts(&lcd, IPADDR);
-        vTaskDelay(time_interval / portTICK_PERIOD_MS);
-        hd44780_clear(&lcd);
-        hd44780_gotoxy(&lcd, 0, 0);
-        hd44780_puts(&lcd, "GATEWAY ADDRESS:");
-        hd44780_gotoxy(&lcd, 0, 1);
-        hd44780_puts(&lcd, GWADDR);
-        vTaskDelay(time_interval / portTICK_PERIOD_MS);
-        hd44780_clear(&lcd);
-        hd44780_gotoxy(&lcd, 0, 0);
-        hd44780_puts(&lcd, "NETWORK MASK:");
-        hd44780_gotoxy(&lcd, 0, 1);
-        hd44780_puts(&lcd, MKADDR);
-        vTaskDelay(time_interval / portTICK_PERIOD_MS);
-        hd44780_clear(&lcd);
-        hd44780_gotoxy(&lcd, 0, 0);
-        hd44780_puts(&lcd, "ACCESS POINT:");
-        hd44780_gotoxy(&lcd, 0, 1);
-        hd44780_puts(&lcd, WIFI_SSID);
-        vTaskDelay(time_interval / portTICK_PERIOD_MS);
-        hd44780_clear(&lcd);
-        hd44780_gotoxy(&lcd, 0, 0);
-        hd44780_puts(&lcd, "B. JESUS DA LAPA");
+        hd44780_puts(&lcd, line1);
+        vTaskDelay(interval_ms / portTICK_PERIOD_MS);
+    }
+}
 
-        for (int i = 0; i < 5; i++)
-        {
-            hd44780_gotoxy(&lcd, 4, 1);
-            hd44780_puts(&lcd, LOCAL_TIME);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
+void showInfo()
+{
+    showPopup("Vlaskz IoT RIG", "Github:@vlaskz", 5000, 1);
+    ESP_LOGI(TAG, "Please support me on patreon/github: @vlaskz");
+    int16_t time_interval = 2000;
+
+    for (;;)
+    {
+
+        showPopup("GATEWAY ADDRESS:", GWADDR, time_interval, 1);
+        showPopup("NETWORK MASK:", MKADDR, time_interval, 1);
+        showPopup("ACCESS POINT", WIFI_SSID, time_interval, 1);
+        showPopup("BOM J. DA LAPA", LOCAL_TIME, 1000, 10);
     }
 }
 
@@ -225,9 +207,8 @@ void getTime()
     {
         time(&now);
         localtime_r(&now, &timeinfo);
-
         strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-        strftime(LOCAL_TIME, sizeof(LOCAL_TIME), "%X", &timeinfo);
+        strftime(LOCAL_TIME, sizeof(LOCAL_TIME), "%H:%M:%S %d%b%y", &timeinfo);
 
         ESP_LOGI(TAG, "Bom Jesus da Lapa: %s", strftime_buf);
 
