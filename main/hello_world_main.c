@@ -1,26 +1,14 @@
-/*
 
-void app_main()
-{
-    hd44780_init(&lcd);
-    wifi_init();
-
-    
-}
-*/
-/* WiFi station Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include <string.h>
+#include <time.h>
+#include <sys/time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "esp_system.h"
+#include "esp_attr.h"
+#include "esp_sleep.h"
+#include "esp_sntp.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -29,13 +17,28 @@ void app_main()
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#define EXAMPLE_ESP_WIFI_SSID "Vlaskz"
-#define EXAMPLE_ESP_WIFI_PASS "taytaytay"
-#define EXAMPLE_ESP_MAXIMUM_RETRY 5
+#define EXAMPLE_ESP_WIFI_SSID "Virus"
+#define EXAMPLE_ESP_WIFI_PASS "cegonha13"
+#define EXAMPLE_ESP_MAXIMUM_RETRY 999
 
 static char IPADDR[16];
 static char GWADDR[16];
 static char MKADDR[16];
+static const char *TAG = "Vlaskz Custom Server";
+
+#ifdef CONFIG_SNTP_TIME_SYNC_METHOD_CUSTOM
+void sntp_sync_time(struct timeval *tv)
+{
+    settimeofday(tv, NULL);
+    ESP_LOGI(TAG, "Time is synced from custom code");
+    sntp_set_sync_status(SNTP_SYNC_STATUS_COMPLETED);
+}
+#endif
+
+void time_sync_notification_cb(struct timeval *tv)
+{
+    ESP_LOGI(TAG, "Notification of a time sincronization event");
+}
 
 hd44780_t lcd = {
     .write_cb = NULL,
@@ -54,8 +57,6 @@ static EventGroupHandle_t s_wifi_event_group;
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
-
-static const char *TAG = "wifi station";
 
 static int s_retry_num = 0;
 
@@ -159,9 +160,16 @@ void wifi_init_sta(void)
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
 }
 
-void show_wifi_info()
+void showInfo()
 {
     int16_t time_interval = 2000;
+    hd44780_clear(&lcd);
+    hd44780_gotoxy(&lcd, 0, 0);
+    hd44780_puts(&lcd, "VLASKZ Presents:");
+    hd44780_gotoxy(&lcd, 0, 1);
+    hd44780_puts(&lcd, "ESP32 LAB TEST");
+    vTaskDelay((time_interval * 3) / portTICK_PERIOD_MS);
+
     for (;;)
     {
         hd44780_clear(&lcd);
@@ -188,6 +196,44 @@ void show_wifi_info()
         hd44780_gotoxy(&lcd, 0, 1);
         hd44780_puts(&lcd, EXAMPLE_ESP_WIFI_SSID);
         vTaskDelay(time_interval / portTICK_PERIOD_MS);
+        hd44780_clear(&lcd);
+        hd44780_gotoxy(&lcd, 0, 0);
+        hd44780_puts(&lcd, "BOM JESUS DA LAPA");
+        hd44780_gotoxy(&lcd, 0, 1);
+        hd44780_puts(&lcd, "HH:MM:SS DD/MM/AA");
+        vTaskDelay(time_interval / portTICK_PERIOD_MS);
+    }
+}
+
+void getTime()
+{
+    time_t now = 0;
+    char strftime_buf[64];
+    struct tm timeinfo = {0};
+    setenv("TZ", "GMT+3", 1);
+    tzset();
+
+    ESP_LOGI(TAG, "Initializing SNTP");
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+    sntp_init();
+    int retry = 0;
+    const int retry_count = 10;
+    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
+    {
+        ESP_LOGI(TAG, "Waiting for system time acquiring and setting ...(%d/%d)", retry, retry_count);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
+    while (1)
+    {
+        time(&now);
+        localtime_r(&now, &timeinfo);
+
+        strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+        ESP_LOGI(TAG, "Bom Jesus da Lapa: %s", strftime_buf);
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -202,13 +248,11 @@ void nvs_init()
     ESP_ERROR_CHECK(ret);
 }
 
-void app_main(void)
+void app_main(void)
 {
-    nvs_init(); //always call this first, if you want to use the non-volatile storage (ROM);
-
-    wifi_init_sta(); //starts the uC as a station;
-
-    hd44780_init(&lcd); //initializes the display;
-
-    xTaskCreate(show_wifi_info, "show_wifi_info", configMINIMAL_STACK_SIZE * 5, NULL, 8, NULL); //task to show some info regarding wifi connection.
+    nvs_init();
+    wifi_init_sta();
+    hd44780_init(&lcd);
+    xTaskCreate(getTime, "get_time", configMINIMAL_STACK_SIZE * 5, NULL, 8, NULL);
+    xTaskCreate(showInfo, "show_wifi_info", configMINIMAL_STACK_SIZE * 5, NULL, 2, NULL);
 }
