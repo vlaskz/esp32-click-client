@@ -50,3 +50,16 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+build/.bin_timestamp
+build/.bin_timestamp
+build/esp-idf/main/libmain.a
+build/.bin_timestamp
+build/.ninja_deps
+build/.bin_timestamp
+build/.ninja_deps
+build/.ninja_log
+build/hello-world.bin
+build/hello-world.elf
+build/hello-world.map
+build/esp-idf/esp32/ld/esp32.project.ld
+build/esp-idf/main/libmain.a

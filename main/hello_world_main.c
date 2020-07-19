@@ -17,23 +17,15 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#define EXAMPLE_ESP_WIFI_SSID "Virus"
-#define EXAMPLE_ESP_WIFI_PASS "cegonha13"
-#define EXAMPLE_ESP_MAXIMUM_RETRY 999
+#define WIFI_SSID "Virus"
+#define WIFI_PASS "cegonha13"
+#define MAXIMUM_RETRY 999
 
 static char IPADDR[16];
 static char GWADDR[16];
 static char MKADDR[16];
-static const char *TAG = "Vlaskz Custom Server";
-
-#ifdef CONFIG_SNTP_TIME_SYNC_METHOD_CUSTOM
-void sntp_sync_time(struct timeval *tv)
-{
-    settimeofday(tv, NULL);
-    ESP_LOGI(TAG, "Time is synced from custom code");
-    sntp_set_sync_status(SNTP_SYNC_STATUS_COMPLETED);
-}
-#endif
+static char LOCAL_TIME[64];
+static const char *TAG = "Vlaskz's ESP32 Tinker";
 
 void time_sync_notification_cb(struct timeval *tv)
 {
@@ -69,17 +61,17 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
-        if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY)
+        if (s_retry_num < MAXIMUM_RETRY)
         {
             esp_wifi_connect();
             s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
+            ESP_LOGI(TAG, "Retrying the Connection");
         }
         else
         {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
         }
-        ESP_LOGI(TAG, "connect to the AP fail");
+        ESP_LOGI(TAG, "Connect to the AP fail");
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
@@ -93,7 +85,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         sprintf(GWADDR, IPSTR, IP2STR(&event->ip_info.gw));
         sprintf(MKADDR, IPSTR, IP2STR(&event->ip_info.netmask));
 
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(TAG, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
@@ -116,8 +108,8 @@ void wifi_init_sta(void)
 
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = EXAMPLE_ESP_WIFI_SSID,
-            .password = EXAMPLE_ESP_WIFI_PASS,
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASS,
             .pmf_cfg = {
                 .capable = true,
                 .required = false},
@@ -127,7 +119,7 @@ void wifi_init_sta(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
+    ESP_LOGI(TAG, "WIFI initialization is complete.");
 
     /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
      * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
@@ -141,13 +133,13 @@ void wifi_init_sta(void)
      * happened. */
     if (bits & WIFI_CONNECTED_BIT)
     {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+        ESP_LOGI(TAG, "Connected to ap SSID:%s password:%s",
+                 WIFI_SSID, WIFI_PASS);
     }
     else if (bits & WIFI_FAIL_BIT)
     {
         ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+                 WIFI_SSID, WIFI_PASS);
     }
     else
     {
@@ -165,9 +157,9 @@ void showInfo()
     int16_t time_interval = 2000;
     hd44780_clear(&lcd);
     hd44780_gotoxy(&lcd, 0, 0);
-    hd44780_puts(&lcd, "VLASKZ Presents:");
+    hd44780_puts(&lcd, "VLASKZ'S IOT RIG");
     hd44780_gotoxy(&lcd, 0, 1);
-    hd44780_puts(&lcd, "ESP32 LAB TEST");
+    hd44780_puts(&lcd, "github: @vlaskz");
     vTaskDelay((time_interval * 3) / portTICK_PERIOD_MS);
 
     for (;;)
@@ -194,13 +186,13 @@ void showInfo()
         hd44780_gotoxy(&lcd, 0, 0);
         hd44780_puts(&lcd, "ACCESS POINT:");
         hd44780_gotoxy(&lcd, 0, 1);
-        hd44780_puts(&lcd, EXAMPLE_ESP_WIFI_SSID);
+        hd44780_puts(&lcd, WIFI_SSID);
         vTaskDelay(time_interval / portTICK_PERIOD_MS);
         hd44780_clear(&lcd);
         hd44780_gotoxy(&lcd, 0, 0);
-        hd44780_puts(&lcd, "BOM JESUS DA LAPA");
+        hd44780_puts(&lcd, "B. JESUS DA LAPA");
         hd44780_gotoxy(&lcd, 0, 1);
-        hd44780_puts(&lcd, "HH:MM:SS DD/MM/AA");
+        hd44780_puts(&lcd, LOCAL_TIME);
         vTaskDelay(time_interval / portTICK_PERIOD_MS);
     }
 }
@@ -231,6 +223,7 @@ void getTime()
         localtime_r(&now, &timeinfo);
 
         strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+
         ESP_LOGI(TAG, "Bom Jesus da Lapa: %s", strftime_buf);
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
