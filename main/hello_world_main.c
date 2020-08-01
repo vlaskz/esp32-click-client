@@ -17,8 +17,11 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#define WIFI_SSID "Virus"
-#define WIFI_PASS "cegonha13"
+//#define WIFI_SSID "casa do internauta 2"
+//#define WIFI_PASS "luma290375"
+
+#define WIFI_SSID "Raiane"
+#define WIFI_PASS "12354rla"
 #define MAXIMUM_RETRY 999
 
 static char IPADDR[16];
@@ -197,7 +200,7 @@ void getTime()
     sntp_set_time_sync_notification_cb(time_sync_notification_cb);
     sntp_init();
     int retry = 0;
-    const int retry_count = 10;
+    const int retry_count = MAXIMUM_RETRY;
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
     {
         ESP_LOGI(TAG, "Waiting for system time acquiring and setting ...(%d/%d)", retry, retry_count);
@@ -233,5 +236,5 @@ void app_main(void)
     wifi_init_sta();
     hd44780_init(&lcd);
     xTaskCreate(getTime, "get_time", configMINIMAL_STACK_SIZE * 5, NULL, 8, NULL);
-    xTaskCreate(showInfo, "show_wifi_info", configMINIMAL_STACK_SIZE * 5, NULL, 2, NULL);
+    xTaskCreate(showInfo, "show_info", configMINIMAL_STACK_SIZE * 5, NULL, 2, NULL);
 }
